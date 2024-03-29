@@ -1,0 +1,48 @@
+gcloud auth list
+gcloud config list project
+
+# To prepare the deployment environment and download a sample application.
+
+gcloud config set compute/zone us-east4-a
+git clone https://github.com/GoogleCloudPlatform/continuous-deployment-on-kubernetes.git
+
+# To create a Kubernetes cluster
+
+gcloud container clusters create jenkins-cd \
+--num-nodes 2 \
+--scopes "https://www.googleapis.com/auth/projecthosting,cloud-platform"
+
+# To confirm that the cluster is running
+
+gcloud container clusters list
+
+# To get the credentials of the cluster
+gcloud container clusters get-credentials jenkins-cd
+
+# To confirm that you can connect to your cluster
+kubectl cluster-info
+
+# If the cluster is running, the URLs of where your Kubernetes components are accessible display:
+
+# To Configure Helm, Add Helm's jenkins chart repository:
+helm repo add jenkins https://charts.jenkins.io
+helm repo update
+
+# To configure and install Jenkins
+helm upgrade --install -f jenkins/values.yaml myjenkins jenkins/jenkins
+
+# To ensure that the Jenkins pod is the running state
+kubectl get pods
+
+#  To setup port forwarding to the Jenkins UI from the Cloud Shell:
+echo http://127.0.0.1:8080
+kubectl --namespace default port-forward svc/myjenkins 8080:8080 >> /dev/null &
+
+# To check that the Jenkins Service was created properly:
+
+kubectl get svc
+
+# To connecct to Jenkins
+kubectl exec --namespace default -it svc/myjenkins -c jenkins -- /bin/cat /run/secrets/additional/chart-admin-password && echo
+
+# To get to the Jenkins user interface, click on the Web Preview button in cloud shell, then click Preview on port 8080
